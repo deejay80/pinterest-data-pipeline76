@@ -21,7 +21,7 @@ class AWSDBConnector:
         return engine
 
 new_connector = AWSDBConnector()
-invoke_url = "https://f1fxsgva0f.execute-api.us-east-1.amazonaws.com/staging"
+invoke_url = "https://f1fxsgva0f.execute-api.us-east-1.amazonaws.com/staging/topics"
 
 def serialize_datetime(obj):
     """Serialize datetime object to string."""
