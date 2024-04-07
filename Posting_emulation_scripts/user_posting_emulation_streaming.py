@@ -9,7 +9,15 @@ from datetime import datetime
 random.seed(100)
 
 class AWSDBConnector:
+    """Class to handle AWS RDS database connection."""
+    
     def __init__(self, config_file):
+        """
+        Initialize AWSDBConnector with database credentials.
+
+        Args:
+            config_file (str): Path to the YAML configuration file.
+        """
         with open(config_file, 'r') as f:
             config = yaml.safe_load(f)
         self.HOST = config['database']['host']
@@ -19,16 +27,32 @@ class AWSDBConnector:
         self.PORT = config['database']['port']
         
     def create_db_connector(self):
+        """Create and return SQLAlchemy engine for database connection."""
         engine = create_engine(f"mysql+pymysql://{self.USER}:{self.PASSWORD}@{self.HOST}:{self.PORT}/{self.DATABASE}?charset=utf8mb4", pool_size=5, max_overflow=10)
         return engine
 
 def serialize_datetime(obj):
-    """Serialize datetime object to string."""
+    """
+    Serialize datetime object to string.
+
+    Args:
+        obj (datetime): Datetime object to serialize.
+
+    Returns:
+        str: Serialized datetime string.
+    """
     if isinstance(obj, datetime):
         return obj.isoformat()
     raise TypeError("Type not serializable")
 
 def send_to_kinesis(data, stream_name):
+    """
+    Send data to Kinesis stream.
+
+    Args:
+        data (list): List of dictionaries representing data to be sent.
+        stream_name (str): Name of the Kinesis stream to send data to.
+    """
     records = []
     partition_key = "my_partition_key"  # Fixed partition key
 
@@ -53,6 +77,16 @@ def send_to_kinesis(data, stream_name):
         print(f"Failed to send data to Kinesis stream {stream_name}. Error: {e}")
 
 def fetch_random_row(connection, table):
+    """
+    Fetch a random row from a database table.
+
+    Args:
+        connection: Database connection object.
+        table (str): Name of the database table to fetch from.
+
+    Returns:
+        list: List containing a single dictionary representing the fetched row.
+    """
     random_row = random.randint(0, 11000)
     query_string = text(f"SELECT * FROM {table} LIMIT {random_row}, 1")
     
@@ -64,12 +98,18 @@ def fetch_random_row(connection, table):
         return []
 
 def run_infinite_post_data_loop(config_file):
+    """
+    Run an infinite loop to periodically post data to Kinesis streams.
+
+    Args:
+        config_file (str): Path to the YAML configuration file.
+    """
     connector = AWSDBConnector(config_file)
     
     stream_names = {
-        "streaming-12d5bb99b7ad-pin": "pinterest_data",
-        "streaming-12d5bb99b7ad-geo": "geolocation_data",
-        "streaming-12d5bb99b7ad-user": "user_data"
+        "stream_name_for_pin": "pinterest_data",
+        "stream_name_for_geo": "geolocation_data",
+        "stream_name_for_user": "user_data"
     }
     
     while True:

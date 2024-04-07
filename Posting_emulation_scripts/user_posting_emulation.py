@@ -6,22 +6,52 @@ from multiprocessing import Process
 import sqlalchemy
 from sqlalchemy import text, create_engine
 from datetime import datetime
+import yaml
+
 random.seed(100)
 
 class AWSDBConnector:
-    def __init__(self):
-        self.HOST = "pinterestdbreadonly.cq2e8zno855e.eu-west-1.rds.amazonaws.com"
-        self.USER = 'project_user'
-        self.PASSWORD = ':t%;yCY3Yjg'
-        self.DATABASE = 'pinterest_data'
-        self.PORT = 3306
+    """Class to handle AWS RDS database connection."""
+
+    def __init__(self, credentials):
+        """
+        Initialize AWSDBConnector with database credentials.
+
+        Args:
+            credentials (dict): Dictionary containing database credentials.
+                Requires keys: 'host', 'user', 'password', 'name', 'port'.
+        """
+        self.HOST = credentials['host']
+        self.USER = credentials['user']
+        self.PASSWORD = credentials['password']
+        self.DATABASE = credentials['name']
+        self.PORT = credentials['port']
         
     def create_db_connector(self):
+        """Create and return SQLAlchemy engine for database connection."""
         engine = create_engine(f"mysql+pymysql://{self.USER}:{self.PASSWORD}@{self.HOST}:{self.PORT}/{self.DATABASE}?charset=utf8mb4", pool_size=5, max_overflow=10)
         return engine
 
-new_connector = AWSDBConnector()
-invoke_url = "https://f1fxsgva0f.execute-api.us-east-1.amazonaws.com/staging/topics"
+def load_credentials(filename):
+    """
+    Load database credentials from YAML file.
+
+    Args:
+        filename (str): Path to the YAML file containing database credentials.
+
+    Returns:
+        dict: Database credentials.
+    """
+    try:
+        with open(filename, 'r') as file:
+            credentials = yaml.safe_load(file)
+        return credentials['database']
+    except FileNotFoundError:
+        print(f"Error: File '{filename}' not found.")
+        return None
+    except yaml.YAMLError as e:
+        print(f"Error loading YAML file: {e}")
+        return None
 
 def serialize_datetime(obj):
     """Serialize datetime object to string."""
@@ -29,8 +59,14 @@ def serialize_datetime(obj):
         return obj.isoformat()
     raise TypeError("Type not serializable")
 
-
 def send_to_kafka(data, topic):
+    """
+    Send data to Kafka topic.
+
+    Args:
+        data (list): List of dictionaries representing data to be sent.
+        topic (str): Kafka topic to send data to.
+    """
     records = []
     for row in data:
         # Convert datetime objects to strings
@@ -48,11 +84,18 @@ def send_to_kafka(data, topic):
     else:
         print(f"Failed to send data to Kafka topic {topic}. Status code: {response.status_code}")
 
-def run_infinite_post_data_loop():
+def run_infinite_post_data_loop(credentials):
+    """
+    Run an infinite loop to periodically post data to Kafka topics.
+
+    Args:
+        credentials (dict): Database credentials.
+    """
     while True:
         sleep(random.randrange(0, 2))
         random_row = random.randint(0, 11000)
-        engine = new_connector.create_db_connector()
+        connector = AWSDBConnector(credentials)
+        engine = connector.create_db_connector()
 
         with engine.connect() as connection:
             # Query pin data
@@ -71,9 +114,11 @@ def run_infinite_post_data_loop():
             user_result = [dict(row._mapping) for row in user_selected_row]
 
         # Send data to Kafka topics
-        send_to_kafka(pin_result, "12d5bb99b7ad.pin")
-        send_to_kafka(geo_result, "12d5bb99b7ad.geo")
-        send_to_kafka(user_result, "12d5bb99b7ad.user")
+        send_to_kafka(pin_result, "topic_name_for_pin")
+        send_to_kafka(geo_result, "topic_name_for_geo")
+        send_to_kafka(user_result, "topic_name_for_user")
 
 if __name__ == "__main__":
-    run_infinite_post_data_loop()
+    credentials = load_credentials("config.yaml")
+    invoke_url = "https://f1fxsgva0f.execute-api.us-east-1.amazonaws.com/staging/topics"
+    run_infinite_post_data_loop(credentials)
