@@ -79,7 +79,7 @@ The diagram provided illustrates the primary architectural components of the bat
 
 
 
-![alt text](https://github.com/deejay80/pinterest-data-pipeline76/blob/master/Diagrams/pinterest_batch_diagram.png)
+![Batch processing](Diagrams/pinterest_batch_diagram.png)
 
 
 ### Stream Processing Architecture
@@ -100,7 +100,7 @@ The following diagram visually depicts the key architectural components within t
 
 
 
-![Batch Processing diagram](Diagrams/pinterest_batch_diagram.png)
+![Stream Processing diagram](Diagrams/pinterest_stream_diagram.png)
 
 #### Data
 Once the data has been processed in each of the pipelines, three tables are generated: pin_table, geo_table, and user_table. Let's examine each of them in detail:
@@ -110,7 +110,7 @@ This table contains information about the Pinterest post data.
 
 
 
-![pinterest post data](Diagrams\pin_table.png)
+![pinterest post data](Diagrams/pin_table.png)
 ##### geo_table
 This table comprises details pertaining to the geolocation data associated with the Pinterest post.
 
@@ -119,7 +119,7 @@ This table comprises details pertaining to the geolocation data associated with 
 
 
 
-![Pinterest geolocation data](Diagrams\geo_table.png)
+![Pinterest geolocation data](Diagrams/geo_table.png)
 
 
 
@@ -127,7 +127,7 @@ This table comprises details pertaining to the geolocation data associated with 
 This table contains information about the User data connected to the Pinterest post.
 
 
-![Pinterest user data](Diagrams\user_table.png)
+![Pinterest user data](Diagrams/user_table.png)
 
 ### The Database diagram
 Here is the database diagram illustrating the interrelationships among the data. It serves as a valuable reference for data querying purposes.
@@ -138,7 +138,7 @@ Here is the database diagram illustrating the interrelationships among the data.
 
 
 
-![alt text](Diagrams/database_diagram.png)
+![database diagram](Diagrams/database_diagram.png)
 ### Querying the Data
 Some questions you can run queries on:
 - Find how many users have joined between 2015 and 2020.
